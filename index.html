@@ -86,6 +86,7 @@
     .cover-sub { font-family: var(--serif); font-size: clamp(1.3rem, 1.9vw, 1.7rem); font-weight: 300; font-style: italic; line-height: 1.4; color: var(--text-dim); max-width: 500px; }
     .cover-desc { color: var(--text-dim); font-size: 13px; line-height: 1.8; max-width: 460px; }
     .cover-art { position: relative; aspect-ratio: 1; background: #000; border: 1px solid var(--line); overflow: hidden; max-width: 520px; margin-left: auto; width: 100%; }
+    
     .canvas-slot { position: absolute; inset: 0; overflow: hidden; }
     .canvas-slot canvas {
       display: block !important;
@@ -94,6 +95,7 @@
       width: 100% !important; height: 100% !important;
       max-width: 100% !important; max-height: 100% !important;
     }
+    
     .cover-foot { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; padding-top: 32px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-faint); }
     .cover-foot .k { display: block; color: var(--gold-soft); margin-bottom: 8px; }
     .cover-foot .v { color: var(--text-dim); letter-spacing: 0.1em; line-height: 1.7; }
@@ -712,25 +714,6 @@
 <script>
 // ============================================================
 // GAME OF SEEDS — GENERATIVE CELLULAR AUTOMATON COMPOSITIONS
-//
-// Same seed → many surfaces:
-//   • Cover, Plate, Frame — same seed
-//   • All 4 surfaces (Print, Scarf, Textile, Wall) — same seed
-//   • Archive — 8 unique seeds
-//
-// Rectangular surfaces tile the square composition to fill.
-//
-// Generative engine (preserved from source):
-//   • Grid of widthDivision × heightDivision cells
-//   • 10–30 three-cell groups as seed
-//   • Custom 3-cell rule, iterated 30–2030 times
-//   • Live cells → coloured glowing dots
-//   • Dead cells → black dots
-//
-// Drawing note: cells are centred in their grid cells (offset
-// by 0.5 * cellSize), and the radius is derived from the smaller
-// of cellW/cellH, so the composition fills the canvas edge to
-// edge with no cut-off circles.
 // ============================================================
 
 const prefix = 'Game-of-Seeds';
@@ -751,61 +734,32 @@ const BG_COLOURS = ['#000000','#040720','#34282C','#3A3B3C','#151B54','#151B8D',
 
 // Foreground palettes (46 options, from source)
 const FG_PALETTES = [
-  ['#A0CE31','#5F31CE'],
-  ['#0EDEF1','#F1210E'],
-  ['#0EDEF1','#930EF1','#F1210E','#6CF10E'],
-  ['#A33FC0','#C03F9C','#633FC0'],
-  ['#D53F2A','#D5942A','#D52A6B'],
-  ['#EEEF10','#7EEF10','#EF8110'],
-  ['#EA15D0','#EA1566','#9915EA'],
-  ['#72C837','#37C844','#BBC837'],
-  ['#B7487A','#B2B748','#48B785','#4D48B7'],
-  ['#0062FF','#FF00E2','#FF9D00','#00FF1D'],
-  ['#46B975','#05FA1C','#DFABC9','#B946A2'],
-  ['#8254AB','#05B1FA','#DFB7AB'],
-  ['#C1AAD5','#AB546F','#00FF1E'],
-  ['#1F07F8','#AB9854','#FFD400'],
-  ['#40BFAD','#9A8E65','#FF0100'],
-  ['#F10E83','#484330','#F1FF00'],
-  ['#707C8F','#C6C0A9','#BDFF00'],
-  ['#9D6286','#FA7676','#50AF80'],
-  ['#515FAE','#76E6FA','#AF5091'],
-  ['#2AD536','#76FAC2','#5052AF'],
-  ['#679895','#B10000','#5052AF'],
-  ['#98678D','#FFACAC','#EEE9D9'],
-  ['#F98BE2','#60EDFF','#A5924C'],
-  ['#065A58','#FAFFAC','#C4C4C4'],
-  ['#BA7645','#C4D100','#FF8A93'],
-  ['#0008A8','#4FFF93','#484F33'],
-  ['#FFE1E0','#D5C800','#608200'],
-  ['#424D78','#B32392','#C7FF27'],
-  ['#ED9F12','#DC7FC7','#00A2AC'],
-  ['#6E008D','#51CA3E','#CB8585'],
-  ['#E50099','#00E6DF','#793333'],
-  ['#005391','#DC75DE','#BFBA69'],
-  ['#05FA39','#6C1A6E','#69BDBF','#87D0FE'],
-  ['#D16C2F','#CFB6B9','#ADF62B','#1C7E70'],
-  ['#BE4187','#E29AEE','#D0D0CF','#65821C'],
-  ['#686A97','#979568'],
-  ['#4D2AD5','#B2D52A'],
+  ['#A0CE31','#5F31CE'], ['#0EDEF1','#F1210E'], ['#0EDEF1','#930EF1','#F1210E','#6CF10E'],
+  ['#A33FC0','#C03F9C','#633FC0'], ['#D53F2A','#D5942A','#D52A6B'], ['#EEEF10','#7EEF10','#EF8110'],
+  ['#EA15D0','#EA1566','#9915EA'], ['#72C837','#37C844','#BBC837'], ['#B7487A','#B2B748','#48B785','#4D48B7'],
+  ['#0062FF','#FF00E2','#FF9D00','#00FF1D'], ['#46B975','#05FA1C','#DFABC9','#B946A2'],
+  ['#8254AB','#05B1FA','#DFB7AB'], ['#C1AAD5','#AB546F','#00FF1E'], ['#1F07F8','#AB9854','#FFD400'],
+  ['#40BFAD','#9A8E65','#FF0100'], ['#F10E83','#484330','#F1FF00'], ['#707C8F','#C6C0A9','#BDFF00'],
+  ['#9D6286','#FA7676','#50AF80'], ['#515FAE','#76E6FA','#AF5091'], ['#2AD536','#76FAC2','#5052AF'],
+  ['#679895','#B10000','#5052AF'], ['#98678D','#FFACAC','#EEE9D9'], ['#F98BE2','#60EDFF','#A5924C'],
+  ['#065A58','#FAFFAC','#C4C4C4'], ['#BA7645','#C4D100','#FF8A93'], ['#0008A8','#4FFF93','#484F33'],
+  ['#FFE1E0','#D5C800','#608200'], ['#424D78','#B32392','#C7FF27'], ['#ED9F12','#DC7FC7','#00A2AC'],
+  ['#6E008D','#51CA3E','#CB8585'], ['#E50099','#00E6DF','#793333'], ['#005391','#DC75DE','#BFBA69'],
+  ['#05FA39','#6C1A6E','#69BDBF','#87D0FE'], ['#D16C2F','#CFB6B9','#ADF62B','#1C7E70'],
+  ['#BE4187','#E29AEE','#D0D0CF','#65821C'], ['#686A97','#979568'], ['#4D2AD5','#B2D52A'],
   ['#A4D42B','#2BD440','#B9A4EC','#8B7479','#FD6A02','#2BD48B','#241154','#AA5567'],
   ['#A2A35C','#2BD4D3','#4B23AD','#AA5598','#FCC903','#669999','#2BAD23','#C3C68C'],
   ['#DB24D2','#24DBDB','#5E735D','#F4FC56','#E51A29','#2481DB','#212820','#DBE171'],
-  ['#20D7DF','#B7B1FF'],
-  ['#97688F','#AB87A5'],
+  ['#20D7DF','#B7B1FF'], ['#97688F','#AB87A5'],
   ['#3DA3C2','#63B6CF','#215ADE','#4D7BE5','#9AA35C','#AEB67C','#AB5467','#BC7685'],
   ['#717F8E','#8D99A5','#2B63D4','#5582DD','#D629B2','#DE54C2','#4758B8','#6C79C6']
 ];
 
 // ============================================================
 // SKETCH FACTORY
-// tile: { cols, rows } — repeat the square composition N times
 // ============================================================
-function makeSketch({ slotId, seedValue, isMaster, maxFrames, tile }) {
+function makeSketch({ slotId, seedValue, isMaster, maxFrames }) {
   const stopAfter = maxFrames || Infinity;
-  const tileCols = (tile && tile.cols) || 1;
-  const tileRows = (tile && tile.rows) || 1;
-
   let canvasW = 0;
   let canvasH = 0;
   let frameCount = 0;
@@ -856,33 +810,17 @@ function makeSketch({ slotId, seedValue, isMaster, maxFrames, tile }) {
         return;
       }
 
-      // Tile composition
-      const tileW = canvasW / tileCols;
-      const tileH = canvasH / tileRows;
-      const tileSize = Math.min(tileW, tileH);
-
-      for (let ty = 0; ty < tileRows; ty++) {
-        for (let tx = 0; tx < tileCols; tx++) {
-          const ox = tx * tileW + (tileW - tileSize) / 2;
-          const oy = ty * tileH + (tileH - tileSize) / 2;
-
-          p.push();
-          p.translate(ox, oy);
-          drawComposition(p, tileSize, seedValue);
-          p.pop();
-        }
-      }
-
+      // Directly draw the composition to fill the entire canvas exactly
+      drawComposition(p, canvasW, canvasH, seedValue);
       frameCount++;
     };
   };
 
-  // ---- Draw the game-of-seeds composition into a square of side `size` ----
-  function drawComposition(p, size, seedValue) {
+  // ---- Draw the game-of-seeds composition to fill the canvas ----
+  function drawComposition(p, w, h, seedValue) {
     const sr = new SeededRandom(seedValue);
-    const cs = size;
 
-    // ---- Parameters (must match setup order for master) ----
+    // Parameters
     const bgIndex = sr.int(0, BG_COLOURS.length - 1);
     const fgIndex = sr.int(0, FG_PALETTES.length - 1);
     const widthDivision = sr.int(5, 104);
@@ -896,11 +834,11 @@ function makeSketch({ slotId, seedValue, isMaster, maxFrames, tile }) {
     const A1 = widthDivision;
     const A2 = heightDivision;
 
-    // ---- Seed the grid with 3-cell groups ----
+    // Seed the grid with 3-cell groups
     let cells = generateMatrixWithOnes(A2, A1, numberOfGroup, sr);
     let cells1 = cells.map(row => row.slice());
 
-    // ---- Iterate the rule ----
+    // Iterate the rule
     for (let step = 0; step <= numOfIt; step++) {
       for (let i = 1; i <= A1 - 2; i++) {
         for (let j = 1; j <= A2 - 2; j++) {
@@ -919,14 +857,16 @@ function makeSketch({ slotId, seedValue, isMaster, maxFrames, tile }) {
       cells = cells1.map(row => row.slice());
     }
 
-    // ---- Background ----
+    // Background
     p.background(bgColour);
 
-    // ---- Draw cells (centred, no edge cut-off) ----
-    const cellW = cs / A1;
-    const cellH = cs / A2;
-    const r = Math.min(cellW, cellH) * 0.5 * 0.97;  // 97% of half-cell radius
+    // Calculate cell size based on actual canvas width/height
+    const cellW = w / A1;
+    const cellH = h / A2;
+    const rx = cellW * 0.485; 
+    const ry = cellH * 0.485;
 
+    // Draw cells
     for (let i = 0; i < A1; i++) {
       for (let j = 0; j < A2; j++) {
         const x = (i + 0.5) * cellW;
@@ -937,28 +877,25 @@ function makeSketch({ slotId, seedValue, isMaster, maxFrames, tile }) {
           p.fill(col);
           p.stroke(col);
           p.drawingContext.shadowColor = col;
-          p.drawingContext.shadowBlur = cellW;
-          p.ellipse(x, y, r * 2, r * 2);
+          p.drawingContext.shadowBlur = Math.min(cellW, cellH) * 1.5;
+          p.ellipse(x, y, rx * 2, ry * 2);
         } else {
           p.fill(0, 0, 0);
           p.stroke(0, 0, 0);
           p.drawingContext.shadowBlur = 0;
-          p.ellipse(x, y, r * 2, r * 2);
+          p.ellipse(x, y, rx * 2, ry * 2);
         }
       }
     }
 
-    // Reset shadow for next composition
     p.drawingContext.shadowBlur = 0;
   }
 
-  // ---- The rule (verbatim from source) ----
   function rules(a, b, c, d, e, f, g, h, i) {
     if (e === 0 && [2].includes(a + b + c + d + f + g + h + i)) return 1;
     return 0;
   }
 
-  // ---- Seed the matrix with 3-cell groups ----
   function generateMatrixWithOnes(rows, cols, numOnesGroups, sr) {
     const matrix = Array.from({ length: rows }, () => Array(cols).fill(0));
 
@@ -971,7 +908,6 @@ function makeSketch({ slotId, seedValue, isMaster, maxFrames, tile }) {
         const orientation = sr.int(0, 1);
 
         if (orientation === 0) {
-          // Horizontal
           const row = sr.int(0, rows - 1);
           const col = sr.int(0, cols - 3);
           if (matrix[row][col] === 0 && matrix[row][col + 1] === 0 && matrix[row][col + 2] === 0) {
@@ -981,7 +917,6 @@ function makeSketch({ slotId, seedValue, isMaster, maxFrames, tile }) {
             placed = true;
           }
         } else {
-          // Vertical
           const row = sr.int(0, rows - 3);
           const col = sr.int(0, cols - 1);
           if (matrix[row][col] === 0 && matrix[row + 1][col] === 0 && matrix[row + 2][col] === 0) {
@@ -993,7 +928,6 @@ function makeSketch({ slotId, seedValue, isMaster, maxFrames, tile }) {
         }
       }
     }
-
     return matrix;
   }
 }
@@ -1045,10 +979,10 @@ function attachVisibilityObserver(p5Instance, element) {
   obs.observe(element);
 }
 
-function createLiveP5({ slotId, seedValue, isMaster, maxFrames, tile, onCreated }) {
+function createLiveP5({ slotId, seedValue, isMaster, maxFrames, onCreated }) {
   whenSlotReady(slotId, (slot) => {
     slot.querySelectorAll('canvas').forEach(c => c.remove());
-    const inst = new p5(makeSketch({ slotId, seedValue, isMaster, maxFrames, tile }), slot);
+    const inst = new p5(makeSketch({ slotId, seedValue, isMaster, maxFrames }), slot);
     inst._frozen = false;
     attachVisibilityObserver(inst, slot);
     if (onCreated) onCreated(inst);
@@ -1064,7 +998,6 @@ function drawPlate() {
     seedValue: seed,
     isMaster: true,
     maxFrames: 2,
-    tile: { cols: 1, rows: 1 },
     onCreated: (inst) => { plateP5 = inst; }
   });
 }
@@ -1078,7 +1011,6 @@ function drawCover() {
     seedValue: seed,
     isMaster: false,
     maxFrames: 2,
-    tile: { cols: 1, rows: 1 },
     onCreated: (inst) => { coverP5 = inst; }
   });
 }
@@ -1092,19 +1024,18 @@ function drawFramedPlate() {
     seedValue: seed,
     isMaster: false,
     maxFrames: 2,
-    tile: { cols: 1, rows: 1 },
     onCreated: (inst) => { frameP5 = inst; }
   });
 }
 
 // ============================================================
-// SURFACES — same seed as plate, tiled to fill aspect ratio
+// SURFACES — same seed as plate, scaled to fill aspect ratio
 // ============================================================
 const surfaceDefs = [
-  { id: 'surfacePrint',   wrapId: 'wrap-surfacePrint',   tile: { cols: 1, rows: 1 } },
-  { id: 'surfaceScarf',   wrapId: 'wrap-surfaceScarf',   tile: { cols: 3, rows: 1 } },
-  { id: 'surfaceTextile', wrapId: 'wrap-surfaceTextile', tile: { cols: 2, rows: 2 } },
-  { id: 'surfaceWall',    wrapId: 'wrap-surfaceWall',    tile: { cols: 1, rows: 2 } }
+  { id: 'surfacePrint',   wrapId: 'wrap-surfacePrint' },
+  { id: 'surfaceScarf',   wrapId: 'wrap-surfaceScarf' },
+  { id: 'surfaceTextile', wrapId: 'wrap-surfaceTextile' },
+  { id: 'surfaceWall',    wrapId: 'wrap-surfaceWall' }
 ];
 
 function drawSurfaces() {
@@ -1133,8 +1064,7 @@ function drawSurfaces() {
           slotId: slot.id || (slot.id = def.id + '-slot'),
           seedValue: seed,
           isMaster: false,
-          maxFrames: 2,
-          tile: def.tile
+          maxFrames: 2
         }),
         slot
       );
@@ -1209,8 +1139,7 @@ function drawArchive() {
           slotId: 'archive-slot-' + i,
           seedValue: archiveSeeds[i],
           isMaster: false,
-          maxFrames: 2,
-          tile: { cols: 1, rows: 1 }
+          maxFrames: 2
         }),
         slot
       );
